@@ -70,8 +70,8 @@ int main() {
 
 
 	for (int i = 0; i < N*N; i++) {
-		pos[i] = (rand() % 4000) / (float)100;
-		sec[i] = (rand() % 4000) / (float)100;
+		pos[i] = (rand() % 4000) / (float)100 + 1;
+		sec[i] = (rand() % 4000) / (float)100 + 1;
 	}
 	for (int i = 0; i < N*N; i++) {
 		if (i % N == 0) puts("");
@@ -83,36 +83,40 @@ int main() {
 		printf("%f ", sec[i]);
 	}
 
-	
+
 	//------------------------------------------------------------------------
-	if (!glfwInit()) {	puts("ERROR");	return -1;}
+	if (!glfwInit()) { puts("ERROR");	return -1; }
 	GLFWwindow *window = glfwCreateWindow(640, 480, "HELLO WORLD", NULL, NULL);
-	if (!window) {	glfwTerminate(); puts("ERROR");	return -1; }
+	if (!window) { glfwTerminate(); puts("ERROR");	return -1; }
 	glfwMakeContextCurrent(window);
 	glewExperimental = GL_TRUE;
 	glewInit();
 	//------------------------------------------------------------------------
 	GLuint buffer;
 	glGenBuffers(1, &buffer);
-	
+
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(float) * (N * N + N * N + N * N) , 0, GL_DYNAMIC_COPY);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(float) * (N * N + N * N + N * N), 0, GL_DYNAMIC_COPY);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 80, buffer);
 	GLfloat *map = (GLfloat *)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE);
 	for (int i = 0; i < N*N; i++) {
 		map[i] = pos[i];
 	}
+	for (int i = N*N; i < N*N + N*N; i++) {
+		map[i] = sec[i - N*N];
+	}
 
 	GLuint shader = CreateShader(computeShader, GL_COMPUTE_SHADER);
 	glUseProgram(shader);
-	glDispatchCompute(1, 1, 1);
-	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+	glDispatchCompute(1,1,1);
+	glMemoryBarrier(GL_ALL_BARRIER_BITS_EXT);
 	glfwTerminate(); 
-	for (int i = N*N + N*N; i < N*N+N*N+N*N; i++) {
+	puts("\n---------------------------------------");
+	
+	system("pause");
+	for (int i = N*N + N*N; i < N*N + N*N + N*N; i++) {
 		if (i % N == 0) puts("");
 		printf("%f ", map[i]);
 	}
-	
-	system("pause");
 	system("pause");
 }
